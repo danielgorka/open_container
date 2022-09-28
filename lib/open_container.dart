@@ -1,7 +1,4 @@
 library open_container;
 
-/// A Calculator.
-class Calculator {
-  /// Returns [value] plus 1.
-  int addOne(int value) => value + 1;
-}
+export 'src/open_container.dart';
+export 'src/open_container_route.dart';
