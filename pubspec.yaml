@@ -1,7 +1,7 @@
 name: open_container
 description: Container transform animation.
-version: 0.1.0
-homepage:
+version: 1.0.0
+homepage: https://github.com/danielgorka/open_container
 
 environment:
   sdk: '>=2.18.0 <3.0.0'
