@@ -403,13 +403,16 @@ class OpenContainerRoute<T> extends PageRoute<T> {
         builder: (BuildContext context, Widget? child) {
           if (animation.isCompleted || _openContainerState == null) {
             return SizedBox.expand(
-              child: Material(
-                color: color,
-                elevation: elevation,
-                shape: shape,
-                child: Builder(
-                  key: _builderKey,
-                  builder: builder,
+              child: Visibility(
+                visible: _openContainerState != null,
+                child: Material(
+                  color: color,
+                  elevation: elevation,
+                  shape: shape,
+                  child: Builder(
+                    key: _builderKey,
+                    builder: builder,
+                  ),
                 ),
               ),
             );
