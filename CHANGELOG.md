@@ -1,3 +1,5 @@
-## 0.0.1
+## 1.0.1
+* Fix first frame showing wrong route
 
-* TODO: Describe initial release.
+## 1.0.0
+* Initial release
