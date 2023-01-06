@@ -14,6 +14,7 @@ class OpenContainerRoute<T> extends PageRoute<T> {
     this.color = Colors.white,
     this.elevation = 4.0,
     this.shape = const RoundedRectangleBorder(),
+    this.fallbackTransitionBuilder,
     required this.builder,
     this.transitionDuration = const Duration(milliseconds: 300),
     this.transitionType = ContainerTransitionType.fade,
@@ -64,6 +65,11 @@ class OpenContainerRoute<T> extends PageRoute<T> {
   ///  * [Material.shape], which is used to implement this property.
   final ShapeBorder shape;
 
+  /// Fallback transition used when [OpenContainer] with the same [tag] is not
+  /// found.
+  final RouteTransitionsBuilder? fallbackTransitionBuilder;
+
+  /// Builder for the new route.
   final WidgetBuilder builder;
 
   /// The time it will take to animate the container from its closed to
@@ -220,6 +226,8 @@ class OpenContainerRoute<T> extends PageRoute<T> {
   AnimationStatus? _currentAnimationStatus;
   OpenContainerState? _openContainerState;
 
+  bool useFallbackTransition = false;
+
   @override
   TickerFuture didPush() {
     void visitor(Element element) {
@@ -236,9 +244,15 @@ class OpenContainerRoute<T> extends PageRoute<T> {
       navigator!.context.visitChildElements(visitor);
 
       assert(
-        _openContainerState != null,
-        'No OpenContainer with tag $tag found',
+        fallbackTransitionBuilder != null || _openContainerState != null,
+        'No OpenContainer with tag $tag found and '
+        'no fallback transition builder specified.',
       );
+
+      if (_openContainerState == null) {
+        useFallbackTransition = true;
+        return;
+      }
 
       final middleColor = _openContainerState!.widget.middleColor ??
           Theme.of(_openContainerState!.context).canvasColor;
@@ -396,6 +410,18 @@ class OpenContainerRoute<T> extends PageRoute<T> {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   ) {
+    if (useFallbackTransition && fallbackTransitionBuilder != null) {
+      return fallbackTransitionBuilder!(
+        context,
+        animation,
+        secondaryAnimation,
+        Builder(
+          key: _builderKey,
+          builder: builder,
+        ),
+      );
+    }
+
     return Align(
       alignment: Alignment.topLeft,
       child: AnimatedBuilder(
