@@ -226,7 +226,11 @@ class OpenContainerRoute<T> extends PageRoute<T> {
   AnimationStatus? _currentAnimationStatus;
   OpenContainerState? _openContainerState;
 
-  bool useFallbackTransition = false;
+  /// Specifies if fallback transition should be used.
+  ///
+  /// By default fallback transition is used.
+  /// If didPush is called, then the main transition is used.
+  bool _useFallbackTransition = true;
 
   @override
   TickerFuture didPush() {
@@ -250,7 +254,9 @@ class OpenContainerRoute<T> extends PageRoute<T> {
       );
 
       if (_openContainerState == null) {
-        useFallbackTransition = true;
+        // No OpenContainer with the given tag was found so we use the fallback
+        // transition.
+        _useFallbackTransition = true;
         return;
       }
 
@@ -292,6 +298,9 @@ class OpenContainerRoute<T> extends PageRoute<T> {
         }
       });
     });
+
+    // Post frame callback registered so fallback transition is not used.
+    _useFallbackTransition = false;
 
     return super.didPush();
   }
@@ -410,23 +419,23 @@ class OpenContainerRoute<T> extends PageRoute<T> {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   ) {
-    if (useFallbackTransition && fallbackTransitionBuilder != null) {
-      return fallbackTransitionBuilder!(
-        context,
-        animation,
-        secondaryAnimation,
-        Builder(
-          key: _builderKey,
-          builder: builder,
-        ),
-      );
-    }
-
     return Align(
       alignment: Alignment.topLeft,
       child: AnimatedBuilder(
         animation: animation,
-        builder: (BuildContext context, Widget? child) {
+        builder: (BuildContext context, Widget? _) {
+          if (_useFallbackTransition && fallbackTransitionBuilder != null) {
+            return fallbackTransitionBuilder!(
+              context,
+              animation,
+              secondaryAnimation,
+              Builder(
+                key: _builderKey,
+                builder: builder,
+              ),
+            );
+          }
+
           if (animation.isCompleted || _openContainerState == null) {
             return SizedBox.expand(
               child: Visibility(
