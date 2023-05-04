@@ -1,3 +1,6 @@
+## 1.1.3
+* Add `surfaceTintColor` property
+
 ## 1.1.2
 * Remove default shadow in Material 3
 * Add `shadowColor` property
