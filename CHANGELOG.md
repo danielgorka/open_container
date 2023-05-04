@@ -1,3 +1,7 @@
+## 1.1.2
+* Remove default shadow in Material 3
+* Add `shadowColor` property
+
 ## 1.1.1
 * Fix `fallbackTransitionBuilder` not working
 
