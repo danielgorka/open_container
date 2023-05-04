@@ -48,6 +48,7 @@ class OpenContainer extends StatefulWidget {
       borderRadius: BorderRadius.all(Radius.circular(4.0)),
     ),
     this.shadowColor = Colors.transparent,
+    this.surfaceTintColor,
     required this.builder,
     this.clipBehavior = Clip.antiAlias,
   }) : super(key: key);
@@ -113,12 +114,27 @@ class OpenContainer extends StatefulWidget {
   /// [OpenContainerRoute.shadowColor]. When the container is closed, it will
   /// transition back to this [shadowColor].
   ///
-  /// Defaults to a [RoundedRectangleBorder] with a [Radius.circular] of 4.0.
+  /// Defaults to [Colors.transparent].
+  ///
+  /// Set this to null to use the default shadow color.
   ///
   /// See also:
   ///
   ///  * [Material.shadowColor], which is used to implement this property.
   final Color? shadowColor;
+
+  /// Surface tint color of the container while it is closed.
+  ///
+  /// When the route is opened it will transition from this [surfaceTintColor]
+  /// to [OpenContainerRoute.surfaceTintColor]. When the container is closed,
+  /// it will transition back to this [surfaceTintColor].
+  ///
+  /// Defaults to null.
+  ///
+  /// See also:
+  ///
+  ///  * [Material.surfaceTintColor], which is used to implement this property.
+  final Color? surfaceTintColor;
 
   /// Called to obtain the child for the container in the closed state.
   ///
@@ -167,6 +183,7 @@ class OpenContainerState extends State<OpenContainer> {
         elevation: widget.elevation,
         shape: widget.shape,
         shadowColor: widget.shadowColor,
+        surfaceTintColor: widget.surfaceTintColor,
         child: Builder(
           key: builderKey,
           builder: widget.builder,
