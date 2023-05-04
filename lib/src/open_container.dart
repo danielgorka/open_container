@@ -47,6 +47,7 @@ class OpenContainer extends StatefulWidget {
     this.shape = const RoundedRectangleBorder(
       borderRadius: BorderRadius.all(Radius.circular(4.0)),
     ),
+    this.shadowColor = Colors.transparent,
     required this.builder,
     this.clipBehavior = Clip.antiAlias,
   }) : super(key: key);
@@ -106,6 +107,19 @@ class OpenContainer extends StatefulWidget {
   ///  * [Material.shape], which is used to implement this property.
   final ShapeBorder shape;
 
+  /// Shadow color of the container while it is closed.
+  ///
+  /// When the route is opened it will transition from this [shadowColor] to
+  /// [OpenContainerRoute.shadowColor]. When the container is closed, it will
+  /// transition back to this [shadowColor].
+  ///
+  /// Defaults to a [RoundedRectangleBorder] with a [Radius.circular] of 4.0.
+  ///
+  /// See also:
+  ///
+  ///  * [Material.shadowColor], which is used to implement this property.
+  final Color? shadowColor;
+
   /// Called to obtain the child for the container in the closed state.
   ///
   /// The [Widget] returned by this builder is faded out when the route
@@ -152,6 +166,7 @@ class OpenContainerState extends State<OpenContainer> {
         color: widget.color,
         elevation: widget.elevation,
         shape: widget.shape,
+        shadowColor: widget.shadowColor,
         child: Builder(
           key: builderKey,
           builder: widget.builder,

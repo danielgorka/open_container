@@ -14,6 +14,7 @@ class OpenContainerRoute<T> extends PageRoute<T> {
     this.color = Colors.white,
     this.elevation = 4.0,
     this.shape = const RoundedRectangleBorder(),
+    this.shadowColor = Colors.transparent,
     this.fallbackTransitionBuilder,
     required this.builder,
     this.transitionDuration = const Duration(milliseconds: 300),
@@ -64,6 +65,22 @@ class OpenContainerRoute<T> extends PageRoute<T> {
   ///
   ///  * [Material.shape], which is used to implement this property.
   final ShapeBorder shape;
+
+  /// Shadow color of the route while it is open.
+  ///
+  /// When the route is opened it will transition from
+  /// [OpenContainer.shadowColor] to this [shadowColor]. When the route is
+  /// closed, it will transition from this [shadowColor] back to
+  /// [OpenContainer.shadowColor].
+  ///
+  /// Defaults to [Colors.transparent].
+  ///
+  /// Set this to [null] to use the default shadow color.
+  ///
+  /// See also:
+  ///
+  ///  * [Material.shadowColor], which is used to implement this property.
+  final Color? shadowColor;
 
   /// Fallback transition used when [OpenContainer] with the same [tag] is not
   /// found.
@@ -217,6 +234,7 @@ class OpenContainerRoute<T> extends PageRoute<T> {
   final RectTween _rectTween = RectTween();
 
   late Tween<double> _elevationTween;
+  late ColorTween _shadowColorTween;
   late ShapeBorderTween _shapeTween;
   late _FlippableTweenSequence<double> _closedOpacityTween;
   late _FlippableTweenSequence<double> _openOpacityTween;
@@ -266,6 +284,10 @@ class OpenContainerRoute<T> extends PageRoute<T> {
       _elevationTween = Tween<double>(
         begin: _openContainerState!.widget.elevation,
         end: elevation,
+      );
+      _shadowColorTween = ColorTween(
+        begin: _openContainerState!.widget.shadowColor,
+        end: shadowColor,
       );
       _shapeTween = ShapeBorderTween(
         begin: _openContainerState!.widget.shape,
@@ -507,6 +529,7 @@ class OpenContainerRoute<T> extends PageRoute<T> {
                       clipBehavior: Clip.antiAlias,
                       animationDuration: Duration.zero,
                       color: colorTween!.evaluate(animation),
+                      shadowColor: _shadowColorTween.evaluate(animation),
                       shape: _shapeTween.evaluate(curvedAnimation),
                       elevation: _elevationTween.evaluate(curvedAnimation),
                       child: Stack(
