@@ -1,3 +1,6 @@
+## 1.1.4
+* Fix size of transformed closed widget
+
 ## 1.1.3
 * Add `surfaceTintColor` property
 
