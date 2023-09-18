@@ -258,6 +258,8 @@ class OpenContainerRoute<T> extends PageRoute<T> {
   late _FlippableTweenSequence<double> _openOpacityTween;
   late _FlippableTweenSequence<Color?> _colorTween;
 
+  late Size _closedSize;
+
   AnimationStatus? _lastAnimationStatus;
   AnimationStatus? _currentAnimationStatus;
   OpenContainerState? _openContainerState;
@@ -389,10 +391,15 @@ class OpenContainerRoute<T> extends PageRoute<T> {
           _openContainerState?.hideableKey.currentContext == null) {
         return;
       }
-      _rectTween.begin =
-          _getRect(_openContainerState!.hideableKey, navigatorBox);
+
+      assert(_openContainerState!.hideableKey.currentContext != null);
+      final render = _openContainerState!.hideableKey.currentContext!
+          .findRenderObject()! as RenderBox;
+
+      _rectTween.begin = _getRect(render, navigatorBox);
+      _closedSize = render.size;
       _openContainerState!.hideableKey.currentState!.placeholderSize =
-          _rectTween.begin!.size;
+          _closedSize;
     }
 
     if (delayForSourceRoute) {
@@ -408,13 +415,9 @@ class OpenContainerRoute<T> extends PageRoute<T> {
     return render.size;
   }
 
-  // Returns the bounds of the [RenderObject] identified by `key` in the
-  // coordinate system of `ancestor`.
-  Rect _getRect(GlobalKey key, RenderBox ancestor) {
-    assert(key.currentContext != null);
+  /// Returns the bounds of the [render] in the coordinate system of [ancestor].
+  Rect _getRect(RenderBox render, RenderBox ancestor) {
     assert(ancestor.hasSize);
-    final RenderBox render =
-        key.currentContext!.findRenderObject()! as RenderBox;
     assert(render.hasSize);
     return MatrixUtils.transformRect(
       render.getTransformTo(ancestor),
@@ -564,8 +567,8 @@ class OpenContainerRoute<T> extends PageRoute<T> {
                             fit: BoxFit.fitWidth,
                             alignment: Alignment.topLeft,
                             child: SizedBox(
-                              width: _rectTween.begin!.width,
-                              height: _rectTween.begin!.height,
+                              width: _closedSize.width,
+                              height: _closedSize.height,
                               child: (_openContainerState?.hideableKey
                                           .currentState?.isInTree ??
                                       false)
