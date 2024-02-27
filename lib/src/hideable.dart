@@ -61,8 +61,11 @@ class HideableState extends State<Hideable> {
     if (_placeholderSize != null) {
       return SizedBox.fromSize(size: _placeholderSize);
     }
-    return Opacity(
-      opacity: _visible ? 1.0 : 0.0,
+    return Visibility(
+      visible: _visible,
+      maintainSize: true,
+      maintainState: true,
+      maintainAnimation: true,
       child: widget.child,
     );
   }
