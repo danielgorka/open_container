@@ -1,3 +1,6 @@
+## 1.1.5
+* Update `Hideable` to improve performance
+
 ## 1.1.4
 * Fix size of transformed closed widget
 
