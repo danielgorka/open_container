@@ -260,6 +260,8 @@ class OpenContainerRoute<T> extends PageRoute<T> {
 
   late Size _closedSize;
 
+  CurvedAnimation? _curvedAnimation;
+
   AnimationStatus? _lastAnimationStatus;
   AnimationStatus? _currentAnimationStatus;
   OpenContainerState? _openContainerState;
@@ -361,6 +363,7 @@ class OpenContainerRoute<T> extends PageRoute<T> {
 
   @override
   void dispose() {
+    _curvedAnimation?.dispose();
     if (_openContainerState?.hideableKey.currentState?.isVisible == false) {
       // This route may be disposed without dismissing its animation if it is
       // removed by the navigator.
@@ -466,6 +469,16 @@ class OpenContainerRoute<T> extends PageRoute<T> {
     Animation<double> animation,
     Animation<double> secondaryAnimation,
   ) {
+    if (_curvedAnimation?.parent != animation) {
+      _curvedAnimation?.dispose();
+      _curvedAnimation = CurvedAnimation(
+        parent: animation,
+        curve: Curves.fastOutSlowIn,
+        reverseCurve:
+            _transitionWasInterrupted ? null : Curves.fastOutSlowIn.flipped,
+      );
+    }
+
     return Align(
       alignment: Alignment.topLeft,
       child: AnimatedBuilder(
@@ -500,12 +513,6 @@ class OpenContainerRoute<T> extends PageRoute<T> {
             );
           }
 
-          final Animation<double> curvedAnimation = CurvedAnimation(
-            parent: animation,
-            curve: Curves.fastOutSlowIn,
-            reverseCurve:
-                _transitionWasInterrupted ? null : Curves.fastOutSlowIn.flipped,
-          );
           TweenSequence<Color?>? colorTween;
           TweenSequence<double>? closedOpacityTween, openOpacityTween;
           Animatable<Color?>? scrimTween;
@@ -539,10 +546,10 @@ class OpenContainerRoute<T> extends PageRoute<T> {
           assert(openOpacityTween != null);
           assert(scrimTween != null);
 
-          final Rect rect = _rectTween.evaluate(curvedAnimation)!;
+          final Rect rect = _rectTween.evaluate(_curvedAnimation!)!;
           return SizedBox.expand(
             child: Container(
-              color: scrimTween!.evaluate(curvedAnimation),
+              color: scrimTween!.evaluate(_curvedAnimation!),
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Transform.translate(
@@ -557,8 +564,8 @@ class OpenContainerRoute<T> extends PageRoute<T> {
                       shadowColor: _shadowColorTween.evaluate(animation),
                       surfaceTintColor:
                           _surfaceTintColorTween.evaluate(animation),
-                      shape: _shapeTween.evaluate(curvedAnimation),
-                      elevation: _elevationTween.evaluate(curvedAnimation),
+                      shape: _shapeTween.evaluate(_curvedAnimation!),
+                      elevation: _elevationTween.evaluate(_curvedAnimation!),
                       child: Stack(
                         fit: StackFit.passthrough,
                         children: <Widget>[
