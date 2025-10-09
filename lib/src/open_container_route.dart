@@ -573,9 +573,10 @@ class OpenContainerRoute<T> extends PageRoute<T> {
                                           .currentState?.isInTree ??
                                       false)
                                   ? null
-                                  : Opacity(
-                                      opacity: closedOpacityTween!
-                                          .evaluate(animation),
+                                  : FadeTransition(
+                                      opacity: closedOpacityTween!.animate(
+                                        animation,
+                                      ),
                                       child: Builder(
                                         key: _openContainerState!.builderKey,
                                         builder:
@@ -592,8 +593,8 @@ class OpenContainerRoute<T> extends PageRoute<T> {
                             child: SizedBox(
                               width: _rectTween.end!.width,
                               height: _rectTween.end!.height,
-                              child: Opacity(
-                                opacity: openOpacityTween!.evaluate(animation),
+                              child: FadeTransition(
+                                opacity: openOpacityTween!.animate(animation),
                                 child: Builder(
                                   key: _builderKey,
                                   builder: builder,

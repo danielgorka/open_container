@@ -1770,11 +1770,14 @@ void _expectMaterialPropertiesHaveAdvanced({
 }
 
 double _getOpacity(WidgetTester tester, String label) {
-  final Opacity widget = tester.firstWidget(find.ancestor(
+  final FadeTransition widget = tester.firstWidget(find.ancestor(
     of: find.text(label),
-    matching: find.byType(Opacity),
+    matching: find.byType(FadeTransition),
   ));
-  return widget.opacity;
+  // Verify that the correct fade transition is retrieved
+  // (i.e. not something from a page transition).
+  assert(widget.child is Builder && widget.child?.key is GlobalKey, '$widget');
+  return widget.opacity.value;
 }
 
 class _TrackedData {
