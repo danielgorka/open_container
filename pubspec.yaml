@@ -1,6 +1,6 @@
 name: open_container
 description: Container transform animation.
-version: 1.1.6
+version: 1.1.7
 homepage: https://github.com/danielgorka/open_container
 
 environment:
