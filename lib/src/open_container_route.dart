@@ -549,8 +549,9 @@ class OpenContainerRoute<T> extends PageRoute<T> {
 
           final Rect rect = _rectTween.evaluate(_curvedAnimation!)!;
           return SizedBox.expand(
-            child: Container(
-              color: scrimTween!.evaluate(_curvedAnimation!),
+            child: ColoredBox(
+              color:
+                  scrimTween!.evaluate(_curvedAnimation!) ?? Colors.transparent,
               child: Align(
                 alignment: Alignment.topLeft,
                 child: Transform.translate(
@@ -601,7 +602,7 @@ class OpenContainerRoute<T> extends PageRoute<T> {
                             height: _rectTween.end!.height,
                             containerWidth: rect.width,
                             containerHeight: rect.height,
-                            alignment: Alignment.center,
+                            alignment: Alignment.topCenter,
                             child: FadeTransition(
                               opacity: openOpacityTween!.animate(animation),
                               child: RepaintBoundary(
