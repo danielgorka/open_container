@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:open_container/src/open_container.dart';
 
@@ -570,38 +571,40 @@ class OpenContainerRoute<T> extends PageRoute<T> {
                         fit: StackFit.passthrough,
                         children: <Widget>[
                           // Closed child fading out.
-                          FittedBox(
-                            fit: BoxFit.fitWidth,
-                            alignment: Alignment.topLeft,
-                            child: SizedBox(
-                              width: _closedSize.width,
-                              height: _closedSize.height,
-                              child: (_openContainerState?.hideableKey
-                                          .currentState?.isInTree ??
-                                      false)
-                                  ? null
-                                  : FadeTransition(
-                                      opacity: closedOpacityTween!.animate(
-                                        animation,
-                                      ),
+                          _AnimatedContainerPart(
+                            width: _closedSize.width,
+                            height: _closedSize.height,
+                            containerWidth: rect.width,
+                            containerHeight: rect.height,
+                            alignment: Alignment.topCenter,
+                            child: (_openContainerState
+                                        ?.hideableKey.currentState?.isInTree ??
+                                    false)
+                                ? null
+                                : FadeTransition(
+                                    opacity: closedOpacityTween!.animate(
+                                      animation,
+                                    ),
+                                    child: RepaintBoundary(
                                       child: Builder(
                                         key: _openContainerState!.builderKey,
                                         builder:
                                             _openContainerState!.widget.builder,
                                       ),
                                     ),
-                            ),
+                                  ),
                           ),
 
                           // Open child fading in.
-                          FittedBox(
-                            fit: BoxFit.fitWidth,
-                            alignment: Alignment.topLeft,
-                            child: SizedBox(
-                              width: _rectTween.end!.width,
-                              height: _rectTween.end!.height,
-                              child: FadeTransition(
-                                opacity: openOpacityTween!.animate(animation),
+                          _AnimatedContainerPart(
+                            width: _rectTween.end!.width,
+                            height: _rectTween.end!.height,
+                            containerWidth: rect.width,
+                            containerHeight: rect.height,
+                            alignment: Alignment.center,
+                            child: FadeTransition(
+                              opacity: openOpacityTween!.animate(animation),
+                              child: RepaintBoundary(
                                 child: Builder(
                                   key: _builderKey,
                                   builder: builder,
@@ -636,6 +639,175 @@ class OpenContainerRoute<T> extends PageRoute<T> {
 
   @override
   String? get barrierLabel => null;
+}
+
+class _AnimatedContainerPart extends SingleChildRenderObjectWidget {
+  const _AnimatedContainerPart({
+    super.child,
+    required this.width,
+    required this.height,
+    required this.containerWidth,
+    required this.containerHeight,
+    required this.alignment,
+  });
+
+  final double width;
+  final double height;
+  final double containerWidth;
+  final double containerHeight;
+  final Alignment alignment;
+
+  @override
+  RenderObject createRenderObject(BuildContext context) {
+    return _RenderAnimatedContainerPart(
+      width: width,
+      height: height,
+      containerWidth: containerWidth,
+      containerHeight: containerHeight,
+      alignment: alignment,
+    );
+  }
+
+  @override
+  void updateRenderObject(
+    BuildContext context,
+    _RenderAnimatedContainerPart renderObject,
+  ) {
+    renderObject
+      ..width = width
+      ..height = height
+      ..containerWidth = containerWidth
+      ..containerHeight = containerHeight
+      ..alignment = alignment;
+  }
+}
+
+class _RenderAnimatedContainerPart extends RenderProxyBox {
+  _RenderAnimatedContainerPart({
+    required double width,
+    required double height,
+    required double containerWidth,
+    required double containerHeight,
+    required Alignment alignment,
+  })  : _width = width,
+        _height = height,
+        _containerWidth = containerWidth,
+        _containerHeight = containerHeight,
+        _alignment = alignment;
+
+  double get width => _width;
+  double _width;
+  set width(double value) {
+    if (_width == value) {
+      return;
+    }
+    _width = value;
+    markNeedsLayout();
+  }
+
+  double get height => _height;
+  double _height;
+  set height(double value) {
+    if (_height == value) {
+      return;
+    }
+    _height = value;
+    markNeedsLayout();
+  }
+
+  double get containerWidth => _containerWidth;
+  double _containerWidth;
+  set containerWidth(double value) {
+    if (_containerWidth == value) {
+      return;
+    }
+    _containerWidth = value;
+    markNeedsPaint();
+  }
+
+  double get containerHeight => _containerHeight;
+  double _containerHeight;
+  set containerHeight(double value) {
+    if (_containerHeight == value) {
+      return;
+    }
+    _containerHeight = value;
+    markNeedsPaint();
+  }
+
+  Alignment get alignment => _alignment;
+  Alignment _alignment;
+  set alignment(Alignment value) {
+    if (_alignment == value) {
+      return;
+    }
+    _alignment = value;
+    markNeedsPaint();
+  }
+
+  @override
+  void performLayout() {
+    if (child != null) {
+      child!.layout(BoxConstraints.tight(Size(width, height)));
+    }
+    size = constraints.biggest;
+  }
+
+  Matrix4 _effectiveTransform() {
+    final double scale = width == 0 ? 1.0 : containerWidth / width;
+    final double cx = width / 2;
+    final double cy = height / 2;
+
+    final double tx = cx * (1.0 - scale);
+    final double ty =
+        alignment == Alignment.topCenter ? 0.0 : cy * (1.0 - scale);
+
+    return Matrix4.diagonal3Values(scale, scale, 1.0)
+      ..setTranslationRaw(tx, ty, 0.0);
+  }
+
+  Offset _childOffset() {
+    final Size containerSize = Size(containerWidth, containerHeight);
+    final Size childSize = Size(width, height);
+    return alignment.alongOffset((containerSize - childSize) as Offset);
+  }
+
+  @override
+  void paint(PaintingContext context, Offset offset) {
+    if (child != null) {
+      final Matrix4 transform = _effectiveTransform();
+      final Offset childOffset = _childOffset();
+      context.pushTransform(
+        needsCompositing,
+        offset + childOffset,
+        transform,
+        (PaintingContext context, Offset offset) {
+          context.paintChild(child!, offset);
+        },
+      );
+    }
+  }
+
+  @override
+  void applyPaintTransform(RenderBox child, Matrix4 transform) {
+    final Offset childOffset = _childOffset();
+    transform.multiply(
+        Matrix4.translationValues(childOffset.dx, childOffset.dy, 0.0));
+    transform.multiply(_effectiveTransform());
+  }
+
+  @override
+  bool hitTestChildren(BoxHitTestResult result, {required Offset position}) {
+    final Matrix4 transform = _effectiveTransform();
+    final Offset childOffset = _childOffset();
+    return result.addWithPaintTransform(
+      transform: transform,
+      position: position - childOffset,
+      hitTest: (BoxHitTestResult result, Offset position) {
+        return child?.hitTest(result, position: position) ?? false;
+      },
+    );
+  }
 }
 
 class _FlippableTweenSequence<T> extends TweenSequence<T> {

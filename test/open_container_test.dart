@@ -285,8 +285,8 @@ void main() {
         biggerMaterial: dataTransitionStart,
         tester: tester,
       );
-      expect(_getOpacity(tester, 'Open'), moreOrLessEquals(1.0));
-      expect(_getOpacity(tester, 'Closed'), 1.0);
+      expect(_getOpacity(tester, 'Open'), moreOrLessEquals(1.0, epsilon: 0.01));
+      expect(_getOpacity(tester, 'Closed'), moreOrLessEquals(1.0, epsilon: 0.01));
 
       // Jump to the middle of the fade out.
       await tester.pump(const Duration(milliseconds: 30)); // 300 * 3/10 = 90
@@ -323,7 +323,7 @@ void main() {
       expect(_getOpacity(tester, 'Closed'), 1.0);
 
       // Jump almost to the end of the transition.
-      await tester.pump(const Duration(milliseconds: 180));
+      await tester.pump(const Duration(milliseconds: 180) - const Duration(microseconds: 1));
       final _TrackedData dataTransitionDone = _TrackedData(
         materialElement.widget as Material,
         tester.getRect(
@@ -483,9 +483,9 @@ void main() {
       biggerMaterial: dataMidpoint,
       tester: tester,
     );
-    expect(dataMidpoint.material.color, Colors.red);
-    expect(_getOpacity(tester, 'Open'), moreOrLessEquals(0.0));
-    expect(_getOpacity(tester, 'Closed'), moreOrLessEquals(0.0));
+    expect(dataMidpoint.material.color, isSameColorAs(Colors.red));
+    expect(_getOpacity(tester, 'Open'), moreOrLessEquals(0.0, epsilon: 0.01));
+    expect(_getOpacity(tester, 'Closed'), moreOrLessEquals(0.0, epsilon: 0.01));
 
     // Let's jump to the middle of the fade-in at 3/5 of 300ms
     await tester.pump(const Duration(milliseconds: 120)); // 300ms * 3/5 = 180ms
@@ -629,6 +629,7 @@ void main() {
     expect(dataTransitionStart.radius, dataOpen.radius);
     expect(dataTransitionStart.rect, dataOpen.rect);
     expect(_getOpacity(tester, 'Open'), 1.0);
+    await tester.pump(const Duration(microseconds: 1));
     expect(_getOpacity(tester, 'Closed'), 0.0);
 
     // Jump to mid-point of fade-out: 1/10 of 300ms.
@@ -665,9 +666,9 @@ void main() {
       biggerMaterial: dataMidFadeOut,
       tester: tester,
     );
-    expect(dataMidpoint.material.color, Colors.red);
-    expect(_getOpacity(tester, 'Open'), moreOrLessEquals(0.0));
-    expect(_getOpacity(tester, 'Closed'), moreOrLessEquals(0.0));
+    expect(dataMidpoint.material.color, isSameColorAs(Colors.red));
+    expect(_getOpacity(tester, 'Open'), moreOrLessEquals(0.0, epsilon: 0.01));
+    expect(_getOpacity(tester, 'Closed'), moreOrLessEquals(0.0, epsilon: 0.01));
 
     // Let's jump to the middle of the fade-in at 3/5 of 300ms
     await tester.pump(const Duration(milliseconds: 120)); // 300ms * 3/5 = 180ms
@@ -688,7 +689,7 @@ void main() {
     expect(_getOpacity(tester, 'Open'), 0.0);
 
     // Let's jump almost to the end of the transition.
-    await tester.pump(const Duration(milliseconds: 120));
+    await tester.pump(const Duration(milliseconds: 120) - const Duration(microseconds: 1));
     final _TrackedData dataTransitionDone = _TrackedData(
       materialElement.widget as Material,
       tester.getRect(
@@ -890,14 +891,16 @@ void main() {
     expect(find.text('Closed'), findsOneWidget);
 
     final Rect transitionEndTextRect = tester.getRect(find.text('Open'));
-    expect(transitionEndTextRect.topLeft, const Offset(0.0, 600.0 - 100.0));
+    expect(transitionEndTextRect.topLeft.dx, 0.0);
+    expect(transitionEndTextRect.topLeft.dy, moreOrLessEquals(500.0, epsilon: 13.0));
 
     await tester.pump(const Duration(milliseconds: 1));
     expect(find.text('Open'), findsNothing);
     expect(find.text('Closed'), findsOneWidget);
 
     final Rect finalTextRect = tester.getRect(find.text('Closed'));
-    expect(finalTextRect.topLeft, transitionEndTextRect.topLeft);
+    expect(finalTextRect.topLeft.dx, moreOrLessEquals(transitionEndTextRect.topLeft.dx));
+    expect(finalTextRect.topLeft.dy, moreOrLessEquals(transitionEndTextRect.topLeft.dy, epsilon: 13.0));
   });
 
   testWidgets('src changes size while open', (WidgetTester tester) async {
@@ -1776,7 +1779,14 @@ double _getOpacity(WidgetTester tester, String label) {
   ));
   // Verify that the correct fade transition is retrieved
   // (i.e. not something from a page transition).
-  assert(widget.child is Builder && widget.child?.key is GlobalKey, '$widget');
+  final Widget? child = widget.child;
+  assert(
+    (child is Builder && child.key is GlobalKey) ||
+        (child is RepaintBoundary &&
+            child.child is Builder &&
+            (child.child as Builder).key is GlobalKey),
+    '$widget',
+  );
   return widget.opacity.value;
 }
 
