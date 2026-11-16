@@ -259,7 +259,8 @@ class OpenContainerRoute<T> extends PageRoute<T> {
   late _FlippableTweenSequence<double> _openOpacityTween;
   late _FlippableTweenSequence<Color?> _colorTween;
 
-  late Size _closedSize;
+  // Zero until measured: the source can be gone or not laid out yet.
+  Size _closedSize = Size.zero;
 
   CurvedAnimation? _curvedAnimation;
 
@@ -391,14 +392,16 @@ class OpenContainerRoute<T> extends PageRoute<T> {
     _rectTween.end = Offset.zero & navSize;
 
     void takeMeasurementsInSourceRoute([Duration? _]) {
+      final render = _openContainerState?.hideableKey.currentContext
+          ?.findRenderObject() as RenderBox?;
+      // The source is gone or not laid out (e.g. scrolled away while the
+      // route was open): keep the last measurements.
       if (!navigatorBox.attached ||
-          _openContainerState?.hideableKey.currentContext == null) {
+          render == null ||
+          !render.attached ||
+          !render.hasSize) {
         return;
       }
-
-      assert(_openContainerState!.hideableKey.currentContext != null);
-      final render = _openContainerState!.hideableKey.currentContext!
-          .findRenderObject()! as RenderBox;
 
       _rectTween.begin = _getRect(render, navigatorBox);
       _closedSize = render.size;
